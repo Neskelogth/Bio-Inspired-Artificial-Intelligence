@@ -54,8 +54,7 @@ def generate_2d_world(dim: int,
 
 def generate_world(dim: int,
                    surface: list):
-    world = np.zeros((dim, dim, dim), dtype=np.int32)
-    print(world.shape)
+    world = np.zeros((dim, dim, dim), dtype=np.uint8)
     for i in range(dim):
         for j in range(dim):
             world[i][j][:surface[i][j]] = np.array([1] * surface[i][j])
@@ -108,7 +107,6 @@ def check_distances(world: np.ndarray | None,
 
     # normal mode for 3d world
     else:
-        # positions.shape[1] == 3
         for item in positions:
             if world is not None and candidate[2] >= sum(world[x][y]):
                 return False
@@ -133,11 +131,9 @@ def place_resources(world: np.ndarray,
                     spawn_dim_z: int = 5,
                     max_tries: int = 100,
                     cutoff_distance: int = 15):
-
     size = world.shape[0]
 
     if len(world.shape) == 2:
-        print('2d world, mode:', mode)
 
         # function to have 2 heaps at 50 size, 50 at 2500 size and 100 at 5000, polynomial interpolation
         heap_number = int((size ** 2 / 12127500) + 1567 * size / 80850 + 5000 / 4851)
@@ -185,28 +181,39 @@ def place_resources(world: np.ndarray,
 
             for i in tqdm(range(heap_number)):
                 r1 = np.arange(start=math.ceil(heap_spawn[i][0] - spawn_dim_x / 2),
-                              stop=int(heap_spawn[i][0] + spawn_dim_x / 2) + 1, step=1)
+                               stop=int(heap_spawn[i][0] + spawn_dim_x / 2) + 1, step=1)
                 r2 = np.arange(start=math.ceil(heap_spawn[i][1] - spawn_dim_y / 2),
                                stop=int(heap_spawn[i][1] + spawn_dim_y / 2) + 1, step=1)
 
                 r1 = [item for item in r1 if 0 <= item < size]
                 r2 = [item for item in r2 if 0 <= item < size]
 
+                indexes_to_remove = list()
+
+                for j in range(len(r2)):
+                    for k in r1:
+                        if r2[j] >= sum(world[k]):
+                            indexes_to_remove.append(j)
+
+                indexes_to_remove = list(set(indexes_to_remove))
+                indexes_to_remove.reverse()
+
+                for item in indexes_to_remove:
+                    r2.pop(item)
+
                 for j in r1:
                     for k in r2:
                         world[j][k] = 2
 
-            plt.imshow(world)
-            plt.show()
+        world = np.rot90(world)
 
     else:
-        print('3d world, mode:', mode)
 
         # function to have 100 heaps at 50 size, 5000 heaps at 1000 size,
         # 10000 at 2500 size and 100000 at 5000, polynomial interpolation
-        heap_number = int(-500000000 / 549989 + (11099980 * size) / 549989 - size ** 2 / 13749725)
+        heap_number = int((-500000000 / 549989 + (11099980 * size) / 549989 - size ** 2 / 13749725) / 4)
         if mode == 'normal':
-            heap_number *= 20
+            heap_number *= 5
 
         if mode == 'surface':
             heap_spawn = np.zeros((heap_number, 2))
@@ -220,6 +227,19 @@ def place_resources(world: np.ndarray,
                     candidate = (int(random.random() * size), int(random.random() * size))
                 heap_spawn[i][0], heap_spawn[i][1] = candidate[0], candidate[1]
 
+            for i in range(heap_number):
+                r1 = np.arange(start=math.ceil(heap_spawn[i][0] - spawn_dim_x / 2),
+                               stop=int(heap_spawn[i][0] + spawn_dim_x / 2) + 1, step=1)
+                r2 = np.arange(start=math.ceil(heap_spawn[i][1] - spawn_dim_y / 2),
+                               stop=int(heap_spawn[i][1] + spawn_dim_y / 2) + 1, step=1)
+
+                r1 = [item for item in r1 if 0 <= item < size]
+                r2 = [item for item in r2 if (0 <= item < size)]
+
+                for j in r1:
+                    for k in r2:
+                        world[j][k][sum(world[j][k]) - 1] = 2
+
         else:
             heap_spawn = np.zeros((heap_number, 3))
             for i in tqdm(range(heap_number), desc='Computing resources spawn'):
@@ -231,10 +251,43 @@ def place_resources(world: np.ndarray,
                         over_tries = True
                         break
                     counter += 1
-                    candidate = (int(random.random() * size), int(random.random() * size))
+                    candidate = (int(random.random() * size), int(random.random() * size), int(random.random() * size))
 
                 heap_spawn[i][0], heap_spawn[i][1], heap_spawn[i][2] = candidate[0], candidate[1], candidate[2]
                 if over_tries and heap_spawn[i][2] >= sum(sum(world[candidate[0]][candidate[1]])):
                     heap_spawn[i][2] = sum(sum(world[candidate[0]][candidate[1]])) - 1
+
+            for i in range(heap_number):
+                r1 = np.arange(start=math.ceil(heap_spawn[i][0] - spawn_dim_x / 2),
+                               stop=int(heap_spawn[i][0] + spawn_dim_x / 2) + 1, step=1)
+                r2 = np.arange(start=math.ceil(heap_spawn[i][1] - spawn_dim_y / 2),
+                               stop=int(heap_spawn[i][1] + spawn_dim_y / 2) + 1, step=1)
+                r3 = np.arange(start=math.ceil(heap_spawn[i][2] - spawn_dim_z / 2),
+                               stop=int(heap_spawn[i][2] + spawn_dim_z / 2) + 1, step=1)
+
+                r1 = [item for item in r1 if 0 <= item < size]
+                r2 = [item for item in r2 if 0 <= item < size]
+                r3 = [item for item in r3 if 0 <= item < size]
+
+                indexes_to_remove = list()
+
+                for j in range(len(r1)):
+                    for k in range(len(r2)):
+                        for w in range(len(r3)):
+                            if r3[w] > sum(world[r1[j]][r2[k]]):
+                                indexes_to_remove.append(w)
+
+                indexes_to_remove = list(set(indexes_to_remove))
+                indexes_to_remove.reverse()
+
+                for idx in indexes_to_remove:
+                    r3.pop(idx)
+
+                for j in r1:
+                    for k in r2:
+                        for w in r3:
+                            world[j][k][w] = 2
+
+        world = np.rot90(world, axes=(1, 2))
 
     return world

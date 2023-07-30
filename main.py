@@ -1,9 +1,11 @@
 from src.world_utils.world_generation import generate_surface, generate_surface_line, generate_2d_world, generate_world, \
     place_resources
+from src.config_file import config
+
 import argparse
 import time
-
-from src.config_file import config
+import matplotlib.pyplot as plt
+import turtle
 
 
 def parse_args():
@@ -41,6 +43,11 @@ def main():
 
     make_assertions(config)
 
+    if config['2d']:
+        print(f'2d world, mode:{config["resource_placement"]} ')
+    else:
+        print(f'3d world, mode:{config["resource_placement"]} ')
+
     start = time.time()
     if not config['2d']:
         surface = generate_surface(config['size'], multiplier=config['multiplier'], offset=config['offset'],
@@ -53,6 +60,10 @@ def main():
 
     world = place_resources(world, config['resource_placement'], config['heap_dimension_x'],
                             config['heap_dimension_y'], config['heap_dimension_z'], config['cutoff_distance'])
+
+    # plt.imshow(world)
+    # plt.show()
+
     print('time', time.time() - start)
 
 
