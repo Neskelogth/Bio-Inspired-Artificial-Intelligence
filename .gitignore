@@ -1,2 +1,6 @@
 venv/
 .idea/
+.run/
+Project Report - Guidelines.pdf
+*__pycache__
+
