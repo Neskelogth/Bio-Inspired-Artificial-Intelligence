@@ -15,10 +15,12 @@ config = {
     'heap_dimension_y': 5,
     'heap_dimension_z': 5,
 
-    # 'cutoff_distance': 15,  # for 2d surface
-    'cutoff_distance': 20,  # for 2d normal
+    'cutoff_distance': 15,  # for 2d surface
+    # 'cutoff_distance': 20,  # for 2d normal
     # 'cutoff_distance': 25,  # for 3d surface
     # 'cutoff_distance': 35,  # for 3d normal
+
+    'worker_number': 5,
 
     'visualize': False
 }
