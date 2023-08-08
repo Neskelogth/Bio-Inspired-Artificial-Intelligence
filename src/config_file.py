@@ -21,6 +21,7 @@ config = {
     # 'cutoff_distance': 35,  # for 3d normal
 
     'worker_number': 5,
+    'epsilon': 1e-6,
 
     'visualize': False
 }

@@ -1,7 +1,9 @@
 import argparse
 import time
+import random
 
 # import matplotlib.pyplot as plt
+# import numpy as np
 
 from src.config_file import config
 from src.world_utils.World import World
@@ -14,7 +16,6 @@ from src.ant_utils.WorkerAnt import WorkerAnt
 def parse_args():
     parser = argparse.ArgumentParser(description='Parser for model selection and pipeline selection')
 
-    # parser.add_argument('pipeline', help='Type of pipeline to use, may be train, test or inference')
     parser.add_argument('--2d', '--2D', help='Whether to use the 2D version of the script. '
                                              'Used for visualization', action='store_true', dest='two_dimensions',
                         default=False)
@@ -60,7 +61,7 @@ def main():
         print(f'3d world, mode:{config["resource_placement"]} ')
 
     start = time.time()  # to measure the time, performance study purposes
-    # world = World(config)
+    world = World(config)
     world_generation_time = time.time() - start
     print(f'world_generation_time {world_generation_time}')
 
@@ -72,9 +73,7 @@ def main():
     ants = list()
 
     ants.append(QueenAnt(size=config['size'], position=(0, 0, 0)))
-    print(ants[0])
     ants.append(WorkerAnt(size=config['size'], position=(1, 0, 0)))
-    print(ants[1])
 
     print('time', time.time() - start)
 

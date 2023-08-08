@@ -4,7 +4,7 @@ import numpy as np
 
 
 class Ant:
-    possible_moves = ['increase_x', 'decrease_x', 'increase_z', 'decrease_z', 'dig_up', 'dig_down']
+    _possible_moves = ['increase_x', 'decrease_x', 'increase_z', 'decrease_z', 'dig_up', 'dig_down']
     _world_type = ''
     _resource_spawn = ''
 
@@ -28,8 +28,14 @@ class Ant:
         assert resource_spawn in ['normal', 'surface'], ('The world type should be either \'surface\' or \'normal\'. '
                                                          'Please check your code to see if you pass the '
                                                          'parameter correctly')
-        _world_type = world_type
-        _resource_spawn = resource_spawn
+        cls._world_type = world_type
+        cls._resource_spawn = resource_spawn
+        if world_type == '2d':
+            cls._possible_moves.remove('increase_z')
+            cls._possible_moves.remove('decrease_z')
+        if resource_spawn == 'surface':
+            cls._possible_moves.remove('dig_up')
+            cls._possible_moves.remove('dig_down')
 
     def __init__(self,
                  **kwagrs):
@@ -40,18 +46,25 @@ class Ant:
 
         """
 
-        assert 'type' in kwagrs and 'size' in kwagrs and 'position' in kwagrs, ('The required keys for the ant construction are \'type\', \'position\', and \'size\'. At least one of them is missing, please provide it when constructing the ant object.')
-        assert type(kwagrs['type']) == str
-        assert type(kwagrs['size']) == int
-        assert (type(kwagrs['position']) == tuple and len(kwagrs['position']) == 3 and
-                type(kwagrs['position'][0]) == type(kwagrs['position'][1]) == type(kwagrs['position'][2]) == int), ('The position parameter should be a tuple of three integers')
+        assert 'type' in kwagrs and 'size' in kwagrs and 'position' in kwagrs, (
+            'The required keys for the ant construction are \'type\', \'position\', and \'size\'. '
+            'At least one of them is missing, please provide it when constructing the ant object.')
+        assert isinstance(kwagrs['type'], str), 'The type argument must be a string'
+        assert isinstance(kwagrs['size'], int), 'The size argument must be an integer'
+        assert (isinstance(kwagrs['position'], tuple) and len(kwagrs['position']) == 3 and
+                isinstance(kwagrs['position'][0], int) and isinstance(kwagrs['position'][1], int) and isinstance(
+                    kwagrs['position'][2], int)), 'The position parameter should be a tuple of three integers'
 
         self.type = kwagrs['type']
         self.size = kwagrs['size']
         self.position = kwagrs['position']
         # A value of 0 represents land, 1 represents air, 2 represents a resource, -1 represents unknown
-        self.map = np.zeros((self.size, self.size, self.size)) - 1
-        self.path_from_beginning = list()
+        if Ant._world_type == '2d':
+            self.map = np.zeros((self.size, self.size), dtype=np.int8) - 1
+            self.map[self.position[0], self.position[1]] = 1
+        else:
+            self.map = np.zeros((self.size, self.size, self.size), dtype=np.int8) - 1
+            self.map[self.position[0], self.position[1], self.position[2]] = 1
 
     def get_position(self):
         return self.position

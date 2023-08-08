@@ -1,9 +1,13 @@
 from .Ant import Ant
+import numpy as np
 
 
 class WorkerAnt(Ant):
     def __init__(self, **kwargs):
         super().__init__(type='worker', **kwargs)
+        self.cycles_from = np.zeros_like(self.map, dtype=np.uint8)
+        self.path = list()
+        self.path.append(self.position)
 
     def __repr__(self):
         return f'Worker ant, located in {self.position}'

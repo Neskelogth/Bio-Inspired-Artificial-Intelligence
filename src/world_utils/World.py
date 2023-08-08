@@ -4,11 +4,13 @@ import math
 import random
 from scipy.spatial import distance
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 
 class World:
     def __init__(self, kwargs):
-        self.dim = kwargs['self.dim']
+
+        self.dim = kwargs['size']
         self.multiplier = kwargs['multiplier']
         self.offset = kwargs['offset']
         self.octaves = kwargs['octaves']
@@ -20,6 +22,7 @@ class World:
         self.heap_dimension_y = kwargs['heap_dimension_y']
         self.heap_dimension_z = kwargs['heap_dimension_z']
         self.cutoff_distance = kwargs['cutoff_distance']
+        self.epsilon = kwargs['epsilon']
         self.map = None
         self.surface = None
 
@@ -28,7 +31,15 @@ class World:
         self.place_resources()
 
     def __repr__(self):
-        raise NotImplementedError
+        if self._2d:
+            plt.imshow(self.map)
+            plt.show()
+            return ''
+        else:
+            raise NotImplementedError
+
+    def get_surface_shape(self):
+        return self.map[0].shape
 
     def generate_surface(self):
 
@@ -51,7 +62,7 @@ class World:
     def generate_world(self):
 
         if self._2d:
-            self.map = np.zeros((self.dim, self.dim), dtype=np.int32)
+            self.map = np.zeros((self.dim, self.dim), dtype=np.uint8)
             for i in range(len(self.surface)):
                 self.map[i][:self.surface[i]] = np.array([1] * self.surface[i])
 
@@ -86,22 +97,26 @@ class World:
                 point = (item, 0)
                 candidate_point = (x, 0)
 
+                if (candidate_point is not None and point is not None and
+                        distance.euclidean(point, candidate_point) < self.cutoff_distance):
+                    return False
+
         # either surface mode for a 3d world or normal mode for 2d world
         elif positions.shape[1] == 2:
 
             for item in positions:
-                if self.map is not None and candidate[1] >= sum(self.map[x]):
+                if self.mode == 'normal' and candidate[1] >= sum(self.map[x]):
                     return False
 
                 if all(item == 0):
                     continue
 
-                if self.mode == 'surface':
-                    point = (item[0], item[1])
-                    candidate_point = (x, y)
-                else:
-                    point = (item[0], item[1], 0)
-                    candidate_point = (x, y, 0)
+                point = (item[0], item[1])
+                candidate_point = (x, y)
+
+                if (candidate_point is not None and point is not None and
+                        distance.euclidean(point, candidate_point) < self.cutoff_distance):
+                    return False
 
         # normal mode for 3d world
         else:
@@ -115,9 +130,9 @@ class World:
                 point = (item[0], item[1], item[2])
                 candidate_point = (x, y, z)
 
-        if (candidate_point is not None and point is not None and
-                distance.euclidean(point, candidate_point) < self.cutoff_distance):
-            return False
+                if (candidate_point is not None and point is not None and
+                        distance.euclidean(point, candidate_point) < self.cutoff_distance):
+                    return False
 
         return True
 
@@ -247,8 +262,8 @@ class World:
                                      int(random.random() * self.dim))
 
                     heap_spawn[i][0], heap_spawn[i][1], heap_spawn[i][2] = candidate[0], candidate[1], candidate[2]
-                    if over_tries and heap_spawn[i][2] >= sum(sum(self.map[candidate[0]][candidate[1]])):
-                        heap_spawn[i][2] = sum(sum(self.map[candidate[0]][candidate[1]])) - 1
+                    if over_tries and heap_spawn[i][2] >= sum(self.map[candidate[0]][candidate[1]]):
+                        heap_spawn[i][2] = (sum(self.map[candidate[0]][candidate[1]])) - 1
 
                 for i in range(heap_number):
                     r1 = np.arange(start=math.ceil(heap_spawn[i][0] - self.heap_dimension_x / 2),
