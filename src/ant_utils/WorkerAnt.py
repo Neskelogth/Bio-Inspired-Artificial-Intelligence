@@ -117,7 +117,10 @@ class WorkerAnt(Ant):
         return f'Worker ant, id = {self.id}, located in {self.position}'
 
     def is_suitable_location(self):
-        return True
+
+        if 'up' in self.surroundings and self.surroundings['up'] == 0:
+            return True
+        return False
 
     def update_position(self, move: str):
 

@@ -375,3 +375,6 @@ class World:
                                 self.map[j][k][w] = 2
 
             self.map = np.rot90(self.map, axes=(1, 2))
+
+    def update(self):
+        pass
