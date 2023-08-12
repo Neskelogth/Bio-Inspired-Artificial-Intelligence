@@ -15,7 +15,7 @@ class QueenAnt(Ant):
         self.passed_time = np.zeros_like(self.map, dtype=np.uint8)
 
     def __repr__(self):
-        return f'Queen ant, located in {self.position}, '
+        return f'Queen ant, located in {self.position}'
 
     def update_passed_time(self):
         self.passed_time += 1
@@ -42,12 +42,13 @@ class QueenAnt(Ant):
                         if self.map[i][j] == -1:
                             self.map[i][j] = worker_map[i][j]
                             self.passed_time[i][j] = cycles_from[i][j]
-                        # if the queen already knows the state of that voxel, if the voxel is 1 (ground) it may
-                        # be updated. The voxel gets effectively updated only if the time passed from the worker's
-                        # measure is lesser than the one from the previous measure
-                        elif self.map[i][j] == 1 and cycles_from[i][j] < self.passed_time[i][j]:
-                            self.map[i][j] = worker_map[i][j]
-                            self.passed_time[i][j] = cycles_from[i][j]
+                        # if the queen already knows the state of that voxel.
+                        # The voxel gets effectively updated only if the time passed from the worker's
+                        # measure is lesser than the one from the queen's previous measure
+                        else:
+                            if cycles_from[i][j] <= self.passed_time[i][j]:
+                                self.map[i][j] = worker_map[i][j]
+                                self.passed_time[i][j] = cycles_from[i][j]
         else:
             for i in range(self.size):
                 for j in range(self.size):
@@ -60,9 +61,10 @@ class QueenAnt(Ant):
                             # if the queen already knows the state of that voxel, if the voxel is 1 (ground) it may
                             # be updated. The voxel gets effectively updated only if the time passed from the worker's
                             # measure is lesser than the one from the previous measure
-                            elif self.map[i][j][k] == 1 and cycles_from[i][j][k] < self.passed_time[i][j][k]:
-                                self.map[i][j][k] = worker_map[i][j][k]
-                                self.passed_time[i][j][k] = cycles_from[i][j][k]
+                            else:
+                                if cycles_from[i][j][k] < self.passed_time[i][j][k]:
+                                    self.map[i][j][k] = worker_map[i][j][k]
+                                    self.passed_time[i][j][k] = cycles_from[i][j][k]
 
     def get_map(self):
         return self.map

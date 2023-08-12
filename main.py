@@ -1,26 +1,26 @@
 import argparse
 import time
-import random
+# import random
 
 # import matplotlib.pyplot as plt
 # import numpy as np
 
-from src.config_file import config
+from src.config.config_file import config
 from src.world_utils.World import World
 
 from src.ant_utils.Ant import Ant
-from src.ant_utils.QueenAnt import QueenAnt
+# from src.ant_utils.QueenAnt import QueenAnt
 from src.ant_utils.WorkerAnt import WorkerAnt
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Parser for model selection and pipeline selection')
 
-    parser.add_argument('--2d', '--2D', help='Whether to use the 2D version of the script. '
+    parser.add_argument('--2d', '--2D', help='Whether to use the 2D version of the script.'
                                              'Used for visualization', action='store_true', dest='two_dimensions',
                         default=False)
 
-    parser.add_argument('--usage', help='Help on how to use the script')
+    parser.add_argument('--usage', help='Help on how to use the script', action='store_true')
 
     return parser.parse_args()
 
@@ -32,7 +32,7 @@ def make_assertions(cfg: dict):
                                              'Please change the values in the config file'
     assert cfg['resource_placement'] in ['surface', 'normal'], 'The resource placement should be either ' \
                                                                '\'surface\' or \'normal\''
-    assert cfg['size'] >= 50, 'The minimum size of the map is 50, please set it accordingly'
+    # assert cfg['size'] >= 50, 'The minimum size of the map is 50, please set it accordingly'  # Disabled for testing
     assert cfg['size'] <= 100000, 'This script uses some interpolation functions that will give a non-valid ' \
                                   'result for sizes higher than 100000'
     assert cfg['worker_number'] > 0, 'The number of worker ants should be greater than 0'
@@ -45,9 +45,13 @@ def make_assertions(cfg: dict):
 def main():
     args = parse_args()
 
-    # TODO usage param
     if args.usage:
-        # print usage
+        print('This script let you simulate a world in which a queen ant and a variable number of worker ants are '
+              'spawn in a randomly generated map, with the goal to explore it and gather resources. \n '
+              'The script allows the following flags: \n '
+              '\t --usage: will print this output and exit the program with a 0 exit status. \n '
+              '\t --2d: will use the 2d version of the world. Using this world will make the script '
+              'computationally lighter.')
         exit(0)
 
     config['2d'] = args.two_dimensions
@@ -70,10 +74,21 @@ def main():
         world_type = '3d'
 
     Ant.set_hyperparameters(world_type=world_type, resource_spawn=config['resource_placement'])
-    ants = list()
+    # ants = list()
 
-    ants.append(QueenAnt(size=config['size'], position=(0, 0, 0)))
-    ants.append(WorkerAnt(size=config['size'], position=(1, 0, 0)))
+    # # (0, 0) is the top left corner
+    # queen_ant = QueenAnt(size=config['size'], position=(0, 0, 0))
+    # world.set_queen_ant_position(queen_ant.get_position())
+    worker_ant = WorkerAnt(size=config['size'], position=(5, 4, 0), id=config['starting_id'])
+
+    world.register_ant_position(worker_ant.get_id(), worker_ant.get_position())
+    worker_ant.set_surroundings(world.get_surroundings(worker_ant.get_id()))
+    worker_ant.move()
+    print(worker_ant.map)
+
+    # print(worker_ant, '\n', worker_ant.map)
+    print(world)
+    # print(worker_ant.move())
 
     print('time', time.time() - start)
 

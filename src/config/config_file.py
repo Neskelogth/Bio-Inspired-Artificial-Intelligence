@@ -1,11 +1,11 @@
 config = {
 
-    'size': 50,
-    'multiplier': 25,
-    'offset': 25,
+    'size': 10,
+    'multiplier': 5,
+    'offset': 5,
 
-    # 'resource_placement': 'surface',
-    'resource_placement': 'normal',
+    'resource_placement': 'surface',
+    # 'resource_placement': 'normal',
     'max_tries': 1000,
 
     'octaves': 3,
@@ -14,6 +14,7 @@ config = {
     'heap_dimension_x': 5,
     'heap_dimension_y': 5,
     'heap_dimension_z': 5,
+    'starting_id': 0,
 
     'cutoff_distance': 15,  # for 2d surface
     # 'cutoff_distance': 20,  # for 2d normal
@@ -23,5 +24,7 @@ config = {
     'worker_number': 5,
     'epsilon': 1e-6,
 
-    'visualize': False
+    # 'visualize': False,
+
+    'pheromone_duration': 10
 }
