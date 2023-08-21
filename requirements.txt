@@ -1,5 +1,6 @@
-tqdm~=4.65.0
+tqdm~=4.66.1
 perlin_noise~=1.12
 matplotlib~=3.7.1
-numpy~=1.24.3
-scipy~=1.11.1
+numpy~=1.25.2
+scipy~=1.11.2
+more-itertools~=10.1.0

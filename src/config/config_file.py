@@ -1,8 +1,8 @@
 config = {
 
-    'size': 10,
-    'multiplier': 5,
-    'offset': 5,
+    'size': 100,
+    'multiplier': 50,
+    'offset': 50,
 
     'resource_placement': 'surface',
     # 'resource_placement': 'normal',
@@ -24,7 +24,9 @@ config = {
     'worker_number': 5,
     'epsilon': 1e-6,
 
-    # 'visualize': False,
-
-    'pheromone_duration': 10
+    'use_pheromones': True,
+    'pheromone_duration': 50,
+    'use_seed': True,
+    'random_seed': 42,
+    'max_iter': 1e6
 }

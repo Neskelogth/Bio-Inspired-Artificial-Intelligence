@@ -7,9 +7,6 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 
-random.seed(42)  # for debugging only
-
-
 class World:
     def __init__(self, kwargs):
 
@@ -35,6 +32,7 @@ class World:
         self.worker_ant_locations = dict()
         self.queen_ant_location = None
         self.pheromone_trails = dict()
+        self.use_pheromones = kwargs['use_pheromones']
 
         # fields generation
         self.generate_surface()
@@ -42,12 +40,10 @@ class World:
         self.place_resources()
 
     def __repr__(self):
-        if self._2d:
-            plt.imshow(self.map)
-            plt.show()
-            return ''
-        else:
-            raise NotImplementedError
+        raise NotImplementedError
+
+    def get_map(self):
+        return self.map
 
     def set_queen_ant_position(self,
                                position: tuple):
@@ -71,6 +67,48 @@ class World:
 
         return self.map[position[2], position[1], position[0]]
 
+    def get_surrounding_pheromones(self,
+                                   ant_position: tuple):
+
+        if not self.use_pheromones:
+            return dict()
+
+        pheromone_surroundings = dict()
+        if self._2d:
+            if (ant_position[0], ant_position[1] + 1, 0) in self.pheromone_trails:
+                pheromone_surroundings['down'] = self.pheromone_trails[(ant_position[0], ant_position[1] + 1, 0)]
+            if (ant_position[0], ant_position[1] - 1, 0) in self.pheromone_trails:
+                pheromone_surroundings['up'] = self.pheromone_trails[(ant_position[0], ant_position[1] - 1, 0)]
+
+            if (ant_position[0] + 1, ant_position[1], 0) in self.pheromone_trails:
+                pheromone_surroundings['right'] = self.pheromone_trails[(ant_position[0] + 1, ant_position[1], 0)]
+            if (ant_position[0] - 1, ant_position[1], 0) in self.pheromone_trails:
+                pheromone_surroundings['left'] = self.pheromone_trails[(ant_position[0] - 1, ant_position[1], 0)]
+
+        else:
+            if (ant_position[0], ant_position[1] + 1, ant_position[2]) in self.pheromone_trails:
+                pheromone_surroundings['down'] = self.pheromone_trails[(ant_position[0], ant_position[1] + 1,
+                                                                        ant_position[2])]
+            if (ant_position[0], ant_position[1] - 1, ant_position[2]) in self.pheromone_trails:
+                pheromone_surroundings['up'] = self.pheromone_trails[(ant_position[0], ant_position[1] - 1,
+                                                                      ant_position[2])]
+
+            if (ant_position[0] + 1, ant_position[1], ant_position[2]) in self.pheromone_trails:
+                pheromone_surroundings['right'] = self.pheromone_trails[(ant_position[0] + 1, ant_position[1],
+                                                                         ant_position[2])]
+            if (ant_position[0] - 1, ant_position[1], ant_position[2]) in self.pheromone_trails:
+                pheromone_surroundings['left'] = self.pheromone_trails[(ant_position[0] - 1, ant_position[1],
+                                                                        ant_position[2])]
+
+            if (ant_position[0], ant_position[1], ant_position[2] + 1) in self.pheromone_trails:
+                pheromone_surroundings['backward'] = self.pheromone_trails[(ant_position[0], ant_position[1],
+                                                                            ant_position[2] + 1)]
+            if (ant_position[0], ant_position[1], ant_position[2] - 1) in self.pheromone_trails:
+                pheromone_surroundings['forward'] = self.pheromone_trails[(ant_position[0], ant_position[1],
+                                                                           ant_position[2] - 1)]
+
+        return pheromone_surroundings
+
     def get_surrounding_map(self,
                             ant_position: tuple):
 
@@ -85,8 +123,13 @@ class World:
 
             if ant_position[0] > 0:
                 surroundings['left'] = self.map[ant_position[1], ant_position[0] - 1]
+                if ant_position[1] > 0:
+                    surroundings['up-left'] = self.map[ant_position[1] - 1, ant_position[0] - 1]
+
             if ant_position[0] < self.dim - 1:
                 surroundings['right'] = self.map[ant_position[1], ant_position[0] + 1]
+                if ant_position[1] > 0:
+                    surroundings['up-right'] = self.map[ant_position[1] - 1, ant_position[0] + 1]
 
         else:
             if ant_position[1] > 0:
@@ -106,7 +149,7 @@ class World:
 
         return surroundings
 
-    def get_surroundings(self, ant: str|int):
+    def get_surroundings(self, ant: str | int):
         if isinstance(ant, int):
             return self.get_surrounding_map(self.worker_ant_locations[ant])
         elif isinstance(ant, str):
@@ -114,7 +157,7 @@ class World:
             if ant == 'queen':
                 return self.get_surrounding_map(self.queen_ant_location)
             else:
-                raise NotImplementedError('Currently get surroundings accepts only an integer for worker ants or '
+                raise NotImplementedError('Currently get surroundings accepts only an integer for worker ants\' id or '
                                           'the string queen (with any capitalization) for the queen ant. Other types '
                                           'of ants are not currently supported')
 
@@ -220,7 +263,7 @@ class World:
             # function to have 2 heaps at size 50, 50 at size 2500 and 100 at size 5000, polynomial interpolation
             heap_number = int((self.dim ** 2 / 12127500) + 1567 * self.dim / 80850 + 5000 / 4851)
             if self.mode == 'normal':
-                heap_number *= 5
+                heap_number *= 2
 
             if self.mode == 'surface':
                 heap_spawn = np.zeros((heap_number,), dtype=np.int8) - 1
@@ -294,9 +337,8 @@ class World:
             # function to have 100 heaps at size 50, 5000 heaps at size 1000,
             # 10000 at size 2500 and 100000 at size 5000, polynomial interpolation
             heap_number = int((-500000000 / 549989 + (11099980 * self.dim) / 549989 - self.dim ** 2 / 13749725) / 4)
-            heap_number = abs(heap_number)
             if self.mode == 'normal':
-                heap_number *= 5
+                heap_number *= 2
 
             if self.mode == 'surface':
                 heap_spawn = np.zeros((heap_number, 2), dtype=np.int8) - 1
@@ -335,8 +377,8 @@ class World:
                             over_tries = True
                             break
                         counter += 1
-                        candidate = (int(random.random() * self.dim), 
-                                     int(random.random() * self.dim), 
+                        candidate = (int(random.random() * self.dim),
+                                     int(random.random() * self.dim),
                                      int(random.random() * self.dim))
 
                     heap_spawn[i][0], heap_spawn[i][1], heap_spawn[i][2] = candidate[0], candidate[1], candidate[2]
@@ -360,7 +402,7 @@ class World:
                     for j in range(len(r1)):
                         for k in range(len(r2)):
                             for w in range(len(r3)):
-                                if r3[w] > self.surface[r1[j]][r2[k]]:
+                                if r3[w] >= self.surface[r1[j]][r2[k]]:
                                     indexes_to_remove.append(w)
 
                     indexes_to_remove = list(set(indexes_to_remove))
@@ -376,5 +418,79 @@ class World:
 
             self.map = np.rot90(self.map, axes=(1, 2))
 
-    def update(self):
-        pass
+    def update_pheromones(self):
+        to_decrease = 1 / self.pheromone_duration
+        for key in self.pheromone_trails:
+            if self.pheromone_trails[key] > 0:
+                # To avoid negative numbers due to possible rounding errors
+                self.pheromone_trails[key] = max(0, self.pheromone_trails[key] - to_decrease)
+
+        new_pheros = dict()
+        for key in self.pheromone_trails:
+            if self.pheromone_trails[key] != 0:
+                new_pheros[key] = self.pheromone_trails[key]
+
+        self.pheromone_trails = new_pheros
+
+    def generate_spawn_position(self,
+                                near_queen: bool = False):
+
+        acceptable_distance_per_axis = 3
+        if near_queen:
+            x = max(0, self.queen_ant_location[0] - int(random.uniform(0, acceptable_distance_per_axis)))
+            z = max(0, self.queen_ant_location[2] - int(random.uniform(0, acceptable_distance_per_axis)))
+
+            if self._2d:
+                return x, self.dim - self.surface[x], 0
+            else:
+                return x, self.dim - self.surface[z][x], z
+
+        else:
+            x = int(random.uniform(0, self.dim))
+            if self._2d:
+                return x, self.dim - self.surface[x], 0
+            else:
+                z = int(random.uniform(0, self.dim))
+                return x, self.dim - self.surface[z][x], z
+
+    def update(self,
+               ant_id: int,
+               ant_position: tuple,
+               ant_move: str,
+               ant_pheromone: str | None,
+               ant_moved: bool | None):
+
+        actions_changing_map = ['pick_item', 'release_item']
+
+        self.update_ant_location(ant_id, ant_position)
+        if ant_pheromone is not None:
+            if ant_position in self.pheromone_trails:
+                self.pheromone_trails[ant_position] += 1
+            else:
+                self.pheromone_trails[ant_position] = 1
+
+        if self._2d:
+            if ant_move in actions_changing_map:
+                if ant_moved:
+                    if ant_move == 'pick_item':
+                        self.map[ant_position[1] - 1, ant_position[0]] = 1
+                    else:
+                        self.map[ant_position[1] + 1, ant_position[0]] = 2
+                else:
+                    if ant_move == 'pick_item':
+                        self.map[ant_position[1], ant_position[0]] = 1
+                    else:
+                        self.map[ant_position[1], ant_position[0]] = 2
+
+        else:
+            if ant_move in actions_changing_map:
+                if ant_moved:
+                    if ant_move == 'pick_item':
+                        self.map[ant_position[2], ant_position[1] - 1, ant_position[0]] = 1
+                    else:
+                        self.map[ant_position[2], ant_position[1] + 1, ant_position[0]] = 2
+                else:
+                    if ant_move == 'pick_item':
+                        self.map[ant_position[2], ant_position[1], ant_position[0]] = 1
+                    else:
+                        self.map[ant_position[2], ant_position[1], ant_position[0]] = 2

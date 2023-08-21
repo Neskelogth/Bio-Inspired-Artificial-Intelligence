@@ -1,13 +1,11 @@
 import abc
-
 import numpy as np
 
 
 class Ant(abc.ABC):
-
     _possible_actions = ['increase_x', 'decrease_x', 'increase_z', 'decrease_z',
-                       'climb_up', 'climb_down',  # climb up and down are for movement on a vertical wall
-                       'pick_item', 'release_item']
+                         'climb_up', 'climb_down',  # climb up and down are for movement on a vertical wall
+                         'pick_item', 'release_item']
     _world_type = ''
     _resource_spawn = ''
 
@@ -64,6 +62,9 @@ class Ant(abc.ABC):
         else:
             self.map = np.zeros((self.size, self.size, self.size), dtype=np.int8) - 1
         self.surroundings = None
+
+    def set_position(self, pos: tuple):
+        self.position = pos
 
     def set_surroundings(self, surr: dict):
         self.surroundings = surr
