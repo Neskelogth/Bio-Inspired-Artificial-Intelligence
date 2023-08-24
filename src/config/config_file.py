@@ -1,8 +1,10 @@
 config = {
 
-    'size': 100,
-    'multiplier': 50,
-    'offset': 50,
+    # should be between 50 and 100000,
+    # but the suggestion is to keep it under 1000 due to the script's requirements in terms of memory
+    'size': 50,
+    'multiplier': 25,
+    'offset': 25,
 
     'resource_placement': 'surface',
     # 'resource_placement': 'normal',
@@ -14,19 +16,16 @@ config = {
     'heap_dimension_x': 5,
     'heap_dimension_y': 5,
     'heap_dimension_z': 5,
-    'starting_id': 0,
 
-    'cutoff_distance': 15,  # for 2d surface
-    # 'cutoff_distance': 20,  # for 2d normal
-    # 'cutoff_distance': 25,  # for 3d surface
-    # 'cutoff_distance': 35,  # for 3d normal
+    'cutoff_distance': 15,
 
     'worker_number': 5,
-    'epsilon': 1e-6,
+    'starting_id': 0,  # id of the first worker ant
 
     'use_pheromones': True,
-    'pheromone_duration': 50,
-    'use_seed': True,
+    'pheromone_duration': 200,
+
+    'use_seed': False,
     'random_seed': 42,
-    'max_iter': 1e6
+    'max_iter': 1e9
 }

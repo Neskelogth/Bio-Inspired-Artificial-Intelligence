@@ -22,7 +22,7 @@ def parse_args():
 
 
 def make_assertions(cfg: dict):
-    assert cfg['size'] >= 50, 'The minimum size of the map is 50, please set it accordingly'  # Disabled for testing
+    assert cfg['size'] >= 50, 'The minimum size of the map is 50, please set it accordingly'
     assert cfg['size'] <= 100000, 'This script uses some interpolation functions that will give a non-valid ' \
                                   'result for sizes higher than 100000'
 
@@ -101,9 +101,9 @@ def main():
 
         counter += 1
         world.update_pheromones()
+        queen_ant.update_passed_time()
         for worker_ant in ants:
 
-            queen_ant.update_passed_time()
             world.update_ant_location(worker_ant.get_id(), worker_ant.get_position())
             worker_ant.set_surroundings(world.get_surroundings(worker_ant.get_id()))
             move, moved = worker_ant.move()
@@ -136,6 +136,7 @@ def main():
 
         val, reason = queen_ant.fully_explored(ants_spawn, counter)
 
+    # print(world)
     if reason == 'max_iter':
         print('Maximum iteration counter reached, unfortunately the stop criterion could not be reached '
               f'within {config["max_iter"]} iterations and it\'s assumed to be unreachable in this scenario')

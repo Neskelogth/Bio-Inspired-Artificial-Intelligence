@@ -1,6 +1,7 @@
 from .Ant import Ant
 import numpy as np
 from more_itertools import locate
+import matplotlib.pyplot as plt
 
 
 class QueenAnt(Ant):
@@ -45,22 +46,19 @@ class QueenAnt(Ant):
             for i in range(len(self.map)):
                 col = self.map[:, i]
                 zeros_positions = list(locate(col, lambda x: x == 0))
-                index_to_pop = list()
-                for j in range(len(zeros_positions) - 1):
-                    if zeros_positions[j + 1] == zeros_positions[j] + 1:
-                        index_to_pop.append(j)
-                for idx in range(len(index_to_pop) - 1, -1, -1):
-                    zeros_positions.pop(index_to_pop[idx])
+                m = max(zeros_positions, default=self.map.shape[0] + 1)
 
-                if len(zeros_positions) == 0:
-                    surface_explored = False
-                    break
-                assert len(zeros_positions) == 1, 'Something went wrong in the queen map update'
+                if m == self.map.shape[0] + 1:
+                    return False, 'criterion'
 
-                idx = zeros_positions[0]
+                for j in range(m):
+                    self.map[j, i] = 0
+
+                idx = m
                 if idx + 1 < len(self.map) and col[idx + 1] != 1 and col[idx + 1] != 2:
                     surface_explored = False
                     break
+
                 surface = np.append(surface, idx)
 
             if Ant._resource_spawn == 'normal':
@@ -99,19 +97,16 @@ class QueenAnt(Ant):
                 for j in range(len(self.map[i])):
                     jth_col = self.map[i, :, j]
                     zeros_positions = list(locate(jth_col, lambda x: x == 0))
-                    index_to_pop = list()
-                    for k in range(len(zeros_positions) - 1):
-                        if zeros_positions[k + 1] == zeros_positions[k] + 1:
-                            index_to_pop.append(k)
-                    for idx in range(len(index_to_pop) - 1, -1, -1):
-                        zeros_positions.pop(index_to_pop[idx])
+                    m = max(zeros_positions, default=self.map.shape[0] + 1)
 
-                    if len(zeros_positions) == 0:
+                    if m == self.map.shape[0] + 1:
                         return False, 'criterion'
 
-                    assert len(zeros_positions) == 1, f'Something went wrong in the queen map update {self.map}'
+                    for k in range(m):
+                        self.map[i, k, j] = 0
+                        self.passed_time[i, k, j] = 0
 
-                    idx = zeros_positions[0]
+                    idx = m
                     if self.map[i][idx][j] + 1 not in [1, 2]:
                         surface_explored = False
                         broken = True
@@ -152,10 +147,10 @@ class QueenAnt(Ant):
         self.passed_time += 1
 
     def move(self):
-        return None
+        raise NotImplementedError('The queen cannot move')
 
     def release_pheromones(self):
-        return None
+        raise NotImplementedError('The queen cannot release pheromones')
 
     def get_knowledge_from_worker(self,
                                   worker_map: np.ndarray,

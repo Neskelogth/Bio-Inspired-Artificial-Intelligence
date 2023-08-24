@@ -23,16 +23,16 @@ class World:
         self.heap_dimension_y = kwargs['heap_dimension_y']
         self.heap_dimension_z = kwargs['heap_dimension_z']
         self.cutoff_distance = kwargs['cutoff_distance']
-        self.epsilon = kwargs['epsilon']
         self.pheromone_duration = kwargs['pheromone_duration']
+
+        self.use_pheromones = kwargs['use_pheromones']
 
         # Fields updated during simulation
         self.map = None
         self.surface = None
-        self.worker_ant_locations = dict()
         self.queen_ant_location = None
+        self.worker_ant_locations = dict()
         self.pheromone_trails = dict()
-        self.use_pheromones = kwargs['use_pheromones']
 
         # fields generation
         self.generate_surface()
@@ -258,12 +258,12 @@ class World:
 
     def place_resources(self):
 
-        if len(self.map.shape) == 2:
+        # function to have 2 heaps at size 50, 50 at size 2500 and 100 at size 5000, polynomial interpolation
+        heap_number = int((self.dim ** 2 / 12127500) + 1567 * self.dim / 80850 + 5000 / 4851)
+        if self.mode == 'normal':
+            heap_number *= 2
 
-            # function to have 2 heaps at size 50, 50 at size 2500 and 100 at size 5000, polynomial interpolation
-            heap_number = int((self.dim ** 2 / 12127500) + 1567 * self.dim / 80850 + 5000 / 4851)
-            if self.mode == 'normal':
-                heap_number *= 2
+        if len(self.map.shape) == 2:
 
             if self.mode == 'surface':
                 heap_spawn = np.zeros((heap_number,), dtype=np.int8) - 1
@@ -334,11 +334,8 @@ class World:
 
         else:
 
-            # function to have 100 heaps at size 50, 5000 heaps at size 1000,
-            # 10000 at size 2500 and 100000 at size 5000, polynomial interpolation
-            heap_number = int((-500000000 / 549989 + (11099980 * self.dim) / 549989 - self.dim ** 2 / 13749725) / 4)
             if self.mode == 'normal':
-                heap_number *= 2
+                heap_number *= 5
 
             if self.mode == 'surface':
                 heap_spawn = np.zeros((heap_number, 2), dtype=np.int8) - 1
@@ -464,10 +461,7 @@ class World:
 
         self.update_ant_location(ant_id, ant_position)
         if ant_pheromone is not None:
-            if ant_position in self.pheromone_trails:
-                self.pheromone_trails[ant_position] += 1
-            else:
-                self.pheromone_trails[ant_position] = 1
+            self.pheromone_trails[ant_position] = 1
 
         if self._2d:
             if ant_move in actions_changing_map:

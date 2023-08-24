@@ -4,4 +4,5 @@ venv/
 Project Report - Guidelines.pdf
 *__pycache__
 
-out.txt
+# Used to record performances
+*.csv  
